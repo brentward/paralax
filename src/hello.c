@@ -87,20 +87,34 @@ void scroll(bool x_scroll, bool y_scroll)
         v = RIA.vsync;
         if (x_scroll)
         {
-            xram0_struct_set(0xFF00, vga_mode3_config_t, x_pos_px, bg_x / 2);
+            xram0_struct_set(0xFF00, vga_mode3_config_t, x_pos_px, bg_x >> 1);
             xram0_struct_set(0xFF10, vga_mode3_config_t, x_pos_px, x);
             if (--x <= -320)
-                x = 280;
+                x = 320;
             if (--bg_x <= -640)
                 bg_x = 640;
         }
-        if (++man_x == 6)
+        if (++man_x == 9)
         {
-            xram0_struct_set(0xFF20, vga_mode3_config_t, xram_data_ptr, 0xFB00);
+            xram0_struct_set(0xFF20, vga_mode3_config_t, xram_data_ptr, 0xAB40);
+            // xram0_struct_set(0xFF20, vga_mode3_config_t, xram_palette_ptr, 0x1000);
         }
-        else if (man_x == 12)
+        else if (man_x == 18)
         {
-            xram0_struct_set(0xFF20, vga_mode3_config_t, xram_data_ptr, 0xF900);
+            xram0_struct_set(0xFF20, vga_mode3_config_t, xram_data_ptr, 0xAC60);
+            // xram0_struct_set(0xFF20, vga_mode3_config_t, xram_palette_ptr, 0x2000);
+
+        }
+        else if (man_x == 27)
+        {
+            xram0_struct_set(0xFF20, vga_mode3_config_t, xram_data_ptr, 0x0AB40);
+            // xram0_struct_set(0xFF20, vga_mode3_config_t, xram_palette_ptr, 0x0000);
+        }
+        
+        else if (man_x == 36)
+        {
+            xram0_struct_set(0xFF20, vga_mode3_config_t, xram_data_ptr, 0xAA20);
+            // xram0_struct_set(0xFF20, vga_mode3_config_t, xram_palette_ptr, 0x0000);
             man_x = 0;
         }
         
@@ -115,12 +129,16 @@ void scroll(bool x_scroll, bool y_scroll)
 
 void main()
 {
-    int fd_bg, fd_tree, fd_man1, fd_man2, result_bg, result_tree, result_man1, result_man2;
-    const char *name_bg = "background2.bin";
-    const char *name_tree = "tree.bin";
-    const char *name_man1 = "man1.bin";
-    const char *name_man2 = "man2.bin";
-    xreg(1, 0, 0, 2); // Canvas
+    int fd, result;
+    const char *name_bg_palatte = "mm_bg.palette.bin";
+    const char *name_bg = "mm_bg.data.bin";
+    const char *name_mg_palatte = "mm_mg.palette.bin";
+    const char *name_mg = "mm_mg.data.bin";
+    const char *name_walk_palatte = "mm_run_1.palette.bin";
+    const char *name_mm_walk_1 = "mm_run_1.data.bin";
+    const char *name_mm_walk_2 = "mm_run_2.data.bin";
+    const char *name_mm_walk_3 = "mm_run_3.data.bin";
+    xreg(1, 0, 0, 1); // Canvas
     clear();
     
     xram0_struct_set(0xFF00, vga_mode3_config_t, x_wrap, true);
@@ -128,69 +146,98 @@ void main()
     xram0_struct_set(0xFF00, vga_mode3_config_t, x_pos_px, 0);
     xram0_struct_set(0xFF00, vga_mode3_config_t, y_pos_px, 0);
     xram0_struct_set(0xFF00, vga_mode3_config_t, width_px, 320);
-    xram0_struct_set(0xFF00, vga_mode3_config_t, height_px, 180);
-    xram0_struct_set(0xFF00, vga_mode3_config_t, xram_data_ptr, 0x0200);
+    xram0_struct_set(0xFF00, vga_mode3_config_t, height_px, 240);
+    xram0_struct_set(0xFF00, vga_mode3_config_t, xram_data_ptr, 0x0020);
     xram0_struct_set(0xFF00, vga_mode3_config_t, xram_palette_ptr, 0x0000);
 
     xram0_struct_set(0xFF10, vga_mode3_config_t, x_wrap, true);
     xram0_struct_set(0xFF10, vga_mode3_config_t, y_wrap, false);
     xram0_struct_set(0xFF10, vga_mode3_config_t, x_pos_px, 0);
-    xram0_struct_set(0xFF10, vga_mode3_config_t, y_pos_px, 60);
-    xram0_struct_set(0xFF10, vga_mode3_config_t, width_px, 50);
-    xram0_struct_set(0xFF10, vga_mode3_config_t, height_px, 100);
-    xram0_struct_set(0xFF10, vga_mode3_config_t, xram_data_ptr, 0xE500);
-    xram0_struct_set(0xFF10, vga_mode3_config_t, xram_palette_ptr, 0xE300);
+    xram0_struct_set(0xFF10, vga_mode3_config_t, y_pos_px, 104);
+    xram0_struct_set(0xFF10, vga_mode3_config_t, width_px, 80);
+    xram0_struct_set(0xFF10, vga_mode3_config_t, height_px, 124);
+    xram0_struct_set(0xFF10, vga_mode3_config_t, xram_data_ptr, 0x9640);
+    xram0_struct_set(0xFF10, vga_mode3_config_t, xram_palette_ptr, 0x9620);
 
     xram0_struct_set(0xFF20, vga_mode3_config_t, x_wrap, false);
     xram0_struct_set(0xFF20, vga_mode3_config_t, y_wrap, false);
-    xram0_struct_set(0xFF20, vga_mode3_config_t, x_pos_px, 152);
-    xram0_struct_set(0xFF20, vga_mode3_config_t, y_pos_px, 140);
-    xram0_struct_set(0xFF20, vga_mode3_config_t, width_px, 16);
-    xram0_struct_set(0xFF20, vga_mode3_config_t, height_px, 32);
-    xram0_struct_set(0xFF20, vga_mode3_config_t, xram_data_ptr, 0xF900);
-    xram0_struct_set(0xFF20, vga_mode3_config_t, xram_palette_ptr, 0xFFFF);
+    xram0_struct_set(0xFF20, vga_mode3_config_t, x_pos_px, 148);
+    xram0_struct_set(0xFF20, vga_mode3_config_t, y_pos_px, 184);
+    xram0_struct_set(0xFF20, vga_mode3_config_t, width_px, 24);
+    xram0_struct_set(0xFF20, vga_mode3_config_t, height_px, 24);
+    xram0_struct_set(0xFF20, vga_mode3_config_t, xram_data_ptr, 0xAA20);
+    xram0_struct_set(0xFF20, vga_mode3_config_t, xram_palette_ptr, 0xAA00);
 
     xreg(1, 0, 1, 3, 2, 0xFF00, 0, 0, 0); // Mode 3
     xreg(1, 0, 1, 3, 2, 0xFF10, 1, 0, 0); // Mode 3
     xreg(1, 0, 1, 3, 2, 0xFF20, 2, 0, 0); // Mode 3
     
-    fd_bg = open(name_bg, O_RDONLY);
-    if (fd_bg < 0)
-        puts("open error");
-    result_bg = read_xram(0x0000, 0x6000, fd_bg);
-    if (result_bg < 0)
+    fd = open(name_bg_palatte, O_RDONLY);
+    if (fd < 0)
+        puts("open error 1");
+    result = read_xram(0x0000, 0x0020, fd);
+    if (result < 0)
         puts("read_xram error 1");
-    result_bg = read_xram(0x6000, 0x6000, fd_bg);
-    if (result_bg < 0)
-        puts("read_xram error 2");
-    result_bg = read_xram(0xC000, 0x2300, fd_bg);
-    if (result_bg < 0)
+    result = close(fd);
+
+    fd = open(name_bg, O_RDONLY);
+    if (fd < 0)
+        puts("open error 2");
+    result = read_xram(0x0020, 0x6000, fd);
+    if (result < 0)
+        puts("read_xram error 2a");
+    result = read_xram(0x6020, 0x3600, fd);
+    if (result < 0)
+        puts("read_xram error 2b");
+    result = close(fd);
+
+    fd = open(name_mg_palatte, O_RDONLY);
+    if (fd < 0)
+        puts("open error 3");
+    result = read_xram(0x9620, 0x0020, fd);
+    if (result < 0)
         puts("read_xram error 3");
-    result_bg = close(fd_bg);
+    result = close(fd);
 
-    fd_tree = open(name_tree, O_RDONLY);
-    if (fd_tree < 0)
-        puts("open error");
-    result_tree = read_xram(0xE300, 0x1588, fd_tree);
-    if (result_tree < 0)
-        puts("read_xram error 1");
-    result_tree = close(fd_tree);
+    fd = open(name_mg, O_RDONLY);
+    if (fd < 0)
+        puts("open error 4");
+    result = read_xram(0x9640, 0x1376, fd);
+    if (result < 0)
+        puts("read_xram error 4");
+    result = close(fd);
 
-    fd_man1 = open(name_man1, O_RDONLY);
-    if (fd_man1 < 0)
-        puts("open error");
-    result_man1 = read_xram(0xF900, 0x200, fd_man1);
-    if (result_man1 < 0)
-        puts("read_xram error 1");
-    result_man1 = close(fd_man1);
+    fd = open(name_walk_palatte, O_RDONLY);
+    if (fd < 0)
+        puts("open error 5");
+    result = read_xram(0xAA00, 0x0020, fd);
+    if (result < 0)
+        puts("read_xram error 5");
+    result = close(fd);
 
-    fd_man2 = open(name_man2, O_RDONLY);
-    if (fd_man2 < 0)
-        puts("open error");
-    result_man2 = read_xram(0xFB00, 0x200, fd_man2);
-    if (result_man2 < 0)
-        puts("read_xram error 1");
-    result_man2 = close(fd_man2);
+    fd = open(name_mm_walk_1, O_RDONLY);
+    if (fd < 0)
+        puts("open error 6");
+    result = read_xram(0xAA20, 0x0120, fd);
+    if (result < 0)
+        puts("read_xram error 6");
+    result = close(fd);
+
+    fd = open(name_mm_walk_2, O_RDONLY);
+    if (fd < 0)
+        puts("open error 7");
+    result = read_xram(0xAB40, 0x0120, fd);
+    if (result < 0)
+        puts("read_xram error 7");
+    result = close(fd);
+
+    fd = open(name_mm_walk_3, O_RDONLY);
+    if (fd < 0)
+        puts("open error 8");
+    result = read_xram(0xAC60, 0x0120, fd);
+    if (result < 0)
+        puts("read_xram error 8");
+    result = close(fd);
 
 
 
